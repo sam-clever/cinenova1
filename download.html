@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1118">
+<title>CineNova — Secure Download</title>
+<style>
+:root {
+  /* CineNova signature palette: charcoal, red and orange */
+  --bg: #0e1118;
+  --panel: #171c27;
+  --panel-hover: #202737;
+  --line: #2a3242;
+  --text: #f5f7fb;
+  --muted: #aab3c4;
+  --accent: #ff3d57;
+  --accent-hover: #e92d49;
+  --accent2: #ff7448;
+  --accent-soft: rgba(255, 61, 87, 0.14);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; border: 0; background: none; }
+
+.top {
+  padding: 24px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  background: rgba(14, 17, 24, 0.92);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.brand {
+  margin: 0 0 12px;
+  color: var(--accent);
+  text-shadow: 0 0 24px rgba(255, 61, 87, .18);
+  font-size: clamp(1.25rem, 3vw, 1.85rem);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: clamp(16px, 4vw, 32px);
+  flex-wrap: wrap;
+}
+.nav a {
+  font-weight: 600;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.nav a:hover, .nav a.active { color: var(--accent); }
+
+.wrap {
+  width: min(920px, 92%);
+  margin: 32px auto 60px;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: clamp(20px, 4vw, 32px);
+  margin: 20px 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.file-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+.poster {
+  display: none;
+  width: 84px;
+  height: 116px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+.file-info {
+  min-width: 0;
+  flex: 1;
+}
+.filename {
+  color: var(--text);
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 750;
+  overflow-wrap: anywhere;
+  margin: 0 0 10px;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn:active { transform: scale(0.98); }
+.blue { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+.blue:hover { background: linear-gradient(135deg, var(--accent-hover), #f05c35); }
+.green { background: var(--accent2); color: #fff; }
+.green:hover { background: #f05c35; color: #fff; }
+.gray { background: var(--line); color: var(--text); }
+.gray:hover { background: var(--panel-hover); }
+.disabled { opacity: 0.4; pointer-events: none; }
+
+.size-grid {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 100px;
+}
+.folder-icon {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, rgba(255, 61, 87, .18), rgba(255, 116, 72, .12));
+  color: var(--accent);
+  border-radius: 16px;
+  font-size: 2rem;
+}
+.size-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.size-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.direct-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0 0 20px;
+}
+.direct {
+  width: 100%;
+  padding: 16px;
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border-radius: 14px;
+  font-weight: 750;
+  text-align: center;
+  display: inline-block;
+  transition: background 0.2s;
+}
+.direct:hover { background: linear-gradient(135deg, var(--accent-hover), #f05c35); }
+.notice {
+  color: var(--accent2);
+  font-size: 0.85rem;
+  margin: 14px 0 0;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.back:hover { color: var(--text); }
+.status {
+  color: var(--muted);
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+@media(max-width: 520px) {
+  .panel { padding: 18px; border-radius: 16px; }
+  .actions { display: grid; grid-template-columns: 1fr; }
+  .actions .btn { width: 100%; }
+  .file-head { gap: 14px; }
+  .poster { width: 64px; height: 88px; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 class="brand"><span style="color:#ff3d57">CINE</span><span style="color:#ffffff">NOVA</span><span style="color:#ff7448"> VAULT</span></h1>
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="index.html#about">About</a>
+    <a href="#file-view" class="active">Download View</a>
+  </nav>
+</header>
+
+<main class="wrap" id="file-view">
+  <section class="panel">
+    <div class="file-head">
+      <img class="poster" id="poster" alt="Media thumbnail">
+      <div class="file-info">
+        <h2 class="filename" id="filename">Locating media stream…</h2>
+        <div class="meta">
+          <span id="sizeMeta">📁 Calculating size…</span>
+          <span id="dateMeta">📅 Checking timestamp…</span>
+        </div>
+        <div class="actions">
+          <a class="btn blue disabled" id="downloadBtn" href="#">⬇ Download File</a>
+          <button class="btn green disabled" id="watchBtn" type="button" disabled>👁 Watch Online</button>
+          <button class="btn gray" id="shareBtn" type="button">🔗 Share Link</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="previewPanel" hidden>
+    <h2 class="direct-title">Watch this media</h2>
+    <video id="mediaPreview" controls playsinline preload="metadata" style="display:none;width:100%;max-height:70vh;background:#000;border-radius:14px"></video>
+    <audio id="audioPreview" controls preload="metadata" style="display:none;width:100%"></audio>
+    <p class="notice" id="mediaError" hidden></p>
+  </section>
+
+  <section class="panel size-grid">
+    <div class="folder-icon">📦</div>
+    <div>
+      <div class="size-label">Total File Footprint</div>
+      <div class="size-value" id="sizeLarge">—</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="direct-title">Direct Stream Access</h2>
+    <p class="sub">Initiate a direct local data transfer channel for this media payload.</p>
+    <a class="direct disabled" id="directBtn" href="#">⬇ Download Now</a>
+    <p class="notice" id="notice">Ensure you comply with local distribution rights before saving.</p>
+  </section>
+
+  <a class="back" href="index.html">← Return to CineNova Dashboard</a>
+  <p class="status" id="status" role="status"></p>
+</main>
+
+<script>
+'use strict';
+const DB_NAME = 'GabflixMediaDB', DB_VERSION = 1, STORE = 'content';
+const $ = id => document.getElementById(id);
+
+function safeURL(value) {
+  try {
+    const u = new URL(value, location.href);
+    return ['https:', 'http:', 'blob:'].includes(u.protocol) ? u.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function getItem(db, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const store = tx.objectStore(STORE);
+    const req = store.get(id);
+    req.onsuccess = () => {
+      if (req.result) return resolve(req.result);
+      // Older CineNova records may have numeric IndexedDB keys.
+      if (/^-?\d+$/.test(id)) {
+        const numericReq = store.get(Number(id));
+        numericReq.onsuccess = () => resolve(numericReq.result || null);
+        numericReq.onerror = () => reject(numericReq.error);
+      } else resolve(null);
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function fmtSize(n) {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return 'Unavailable';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0, v = n;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${v.toFixed(i >= 2 ? 1 : 0)} ${units[i]}`;
+}
+
+function setupLink(el, url, filename) {
+  el.href = url || '#';
+  el.classList.toggle('disabled', !url);
+  el.setAttribute('aria-disabled', url ? 'false' : 'true');
+  if (url && filename) {
+    el.setAttribute('download', filename);
+  } else {
+    el.removeAttribute('download');
+  }
+}
+
+(async () => {
+  let db;
+  const objectUrls = [];
+  const revokeObjectUrls = () => objectUrls.splice(0).forEach(url => URL.revokeObjectURL(url));
+  window.addEventListener('pagehide', revokeObjectUrls, { once: true });
+
+  try {
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) {
+      $('filename').textContent = 'No File Specified';
+      $('status').textContent = 'Open this page using the Download button on a CineNova title.';
+      return;
+    }
+
+    if (!('indexedDB' in window)) throw new Error('This browser does not support IndexedDB.');
+    db = await openDB();
+    const item = await getItem(db, id);
+
+    if (!item) {
+      $('filename').textContent = 'Media Not Found';
+      $('status').textContent = 'CineNova could not find this media in this browser storage. Open the Player and Download page from the same website address (same origin). If you opened the files using file://, run them from the same local web server or publish both files together on Netlify.';
+      $('notice').textContent = 'No matching media record was found for this ID.';
+      return;
+    }
+
+    const filename = String(item.fileName || item.title || 'CineNova-Media').trim();
+    let url = '';
+    const blob = item.contentBlob;
+    if (blob instanceof Blob && blob.size > 0) {
+      url = URL.createObjectURL(blob);
+      objectUrls.push(url);
+    } else {
+      url = safeURL(item.externalLink || item.contentURL || '');
+    }
+
+    const size = fmtSize(blob instanceof Blob ? blob.size : null);
+    $('filename').textContent = filename;
+    $('sizeMeta').textContent = `📁 ${size === 'Unavailable' ? 'Size unknown' : size}`;
+    const date = item.createdAt ? new Date(item.createdAt) : null;
+    $('dateMeta').textContent = `📅 ${date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString() : 'Recent'}`;
+    $('sizeLarge').textContent = size;
+
+    if (item.imageBlob instanceof Blob && item.imageBlob.size) {
+      const posterUrl = URL.createObjectURL(item.imageBlob);
+      objectUrls.push(posterUrl);
+      $('poster').src = posterUrl;
+      $('poster').style.display = 'block';
+    } else if (item.externalImage) {
+      const image = safeURL(item.externalImage);
+      if (image) { $('poster').src = image; $('poster').style.display = 'block'; }
+    }
+
+    setupLink($('downloadBtn'), url, filename);
+    setupLink($('directBtn'), url, filename);
+    $('watchBtn').disabled = !url;
+    $('watchBtn').classList.toggle('disabled', !url);
+
+    if (url) {
+      const mime = (blob instanceof Blob && blob.type) || '';
+      const isAudio = mime.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg|flac)(?:$|[?#])/i.test(filename);
+      const media = isAudio ? $('audioPreview') : $('mediaPreview');
+      media.src = url;
+      if (!isAudio && $('poster').src) media.poster = $('poster').src;
+      media.style.display = 'block';
+      $('previewPanel').hidden = false;
+      media.addEventListener('error', () => {
+        $('mediaError').hidden = false;
+        $('mediaError').textContent = 'The media record was found, but this browser could not play its format or read its data. Try Download File, or upload a browser-supported MP4 (H.264/AAC) or WebM file.';
+      }, { once: true });
+      $('watchBtn').addEventListener('click', () => {
+        media.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        media.play().catch(() => {});
+      });
+      $('notice').textContent = 'Media found. You can preview it here or save the original file.';
+    } else {
+      $('notice').textContent = 'This record has no playable media file or valid external media link.';
+      $('status').textContent = 'The title details were found, but no media file is attached. Re-upload the media in CineNova Admin.';
+    }
+
+    $('shareBtn').addEventListener('click', async () => {
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'CineNova — ' + filename, text: 'Check out this title on CineNova', url: location.href });
+        } else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(location.href);
+          $('shareBtn').textContent = '✓ Copied Link';
+        } else alert('Copy this page URL to share: ' + location.href);
+      } catch (e) { if (e.name !== 'AbortError') console.error('Share action failed', e); }
+    });
+  } catch (err) {
+    $('filename').textContent = 'Download Page Error';
+    $('status').textContent = (err?.message || 'Unable to load media.') + ' Make sure both pages are hosted on the same origin.';
+  } finally {
+    if (db) db.close();
+  }
+})();
+</script>
+</body>
+</html>
